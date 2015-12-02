@@ -74,10 +74,10 @@ function preconfig() {
 
       contractaddr = success.trim();
       contract = plantoidContract.at(contractaddr);
+      console.log(contract.plant());
+      //accountoption(initiator, contract);
 
-      accountoption(initiator, contract);
-      //console.log(web3.eth.getCode('0x3a06ff369ce59cf83b68d0c8c0cb32e63dfd17c0')); //('0xdf1b687a99216ad4ebf9176983bf165be7b25bbe'));
-      //helpers.addressTx('1CGK2zrSFdsahENkFmTJCATRzpCT1opqBH', contract, web3.eth.accounts[1]);
+      //helpers.addressTx('19QZ94jwrnzLcmUawGPwpFwxNz6Z6i1CfD', contract, web3.eth.accounts[1]);
 
     }
   });

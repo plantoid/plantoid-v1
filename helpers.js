@@ -69,8 +69,8 @@ function deployContract(cb) {
 
 function addFunds(amount, timestamp, contract, address) {
   var gasprice = web3.eth.gasPrice.toString(10);
-  console.log("Tpye", typeof(amount));
-  contract.newFunds(5, {from:address, gas: 300000, gasPrice: gasprice}, function(err,success) {
+
+  contract.newFunds(amount, {from:address, gas: 300000, gasPrice: gasprice}, function(err,success) {
     if (success) {
       //we write the timestamp of the latest tx locally to lasttx.txt
       fs.writeFile('./lasttx.txt', timestamp, function(err) {
@@ -322,12 +322,19 @@ function truthcheck(txs, contract, ethaddress) {
   txs.forEach(function(apis) {
     apis.forEach(function(tx) {
       list_txs.push(tx['txhash']);
-      var tx_value = {'hash':tx['txhash'], 'value': tx['value'], 'timestamp': tx['timestamp']};
+      var tx_value = [tx['txhash'],tx['value'], tx['timestamp']];
       txs_and_values.push(tx_value);
     })
   });
 
+  //We sort the array by timestamp
+  txs_and_values.sort(function(a,b) {
+    return (a[2] > b[2]) ? 1 : ((b[2] > a[2]) ? -1 : 0);
+  });
+
   var tx_counts = [];
+  var valuesum = 0;
+  var latesttimestamp = 0;
 
   list_txs.forEach(function(tx, index) {
     if (tx) {
@@ -344,8 +351,9 @@ function truthcheck(txs, contract, ethaddress) {
 
       if (new_tx['count'] >= 2) {
         for (var i = 0; i < txs_and_values.length; i++) {
-          if (txs_and_values[i]['hash'] === new_tx['hash']) {
-            addFunds(txs_and_values[i]['value'], txs_and_values[i]['timestamp'], contract, ethaddress);
+          if (txs_and_values[i][0] === new_tx['hash']) {
+            valuesum += txs_and_values[i][1];
+            latesttimestamp = Math.max(latesttimestamp, txs_and_values[i][2]);
             break;
           }
         }
@@ -353,6 +361,8 @@ function truthcheck(txs, contract, ethaddress) {
       tx_counts.push(new_tx);
     }
   });
+
+  addFunds(valuesum, latesttimestamp, contract, ethaddress);
 }
 
 module.exports = {

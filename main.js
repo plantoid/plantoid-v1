@@ -8,11 +8,10 @@ var helpers = require('./helpers');
 var web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545"));
 prompt.start();
 var address;
-var contract;
 
 //We declare the ABI globally for easy access
 
-function ethaccounttest(cb, contract) {
+function accountoption(cb, contract) {
   // TODO: Implement account test
   // Tests whether accounts have enough funds and lets user choose and unlock account of choice
   var accounts = web3.eth.accounts;
@@ -25,12 +24,38 @@ function ethaccounttest(cb, contract) {
     prompt.get(['account'], function(err, result) {
       console.log("Using account %s for all operations.\n", accounts[result.account]);
       address = accounts[result.account];
-      cb();
+      if (contract) {
+        cb(contract, contract.plant()[1]);
+      }
+      else {
+        cb(initiator);
+      }
     });
   }
 }
 
-function initiator() {
+function initiator(contract, btcaddr) {
+  helpers.listener(contract);
+  setInterval(helpers.addressTx, 1000 * 60 * 15, btcaddr, contract, web3.eth.accounts[1]);
+  mainmenu(contract);
+}
+
+function mainmenu(contract) {
+  console.log("\n#### General Panel ####");
+  console.log("What do you want to do next?\n");
+  console.log("a) Add a Payout Recipient (Enter 'a' in the prompt below)");
+  console.log("b) Add a Child (Enter 'b' in the prompt below)");
+  prompt.get(['choice'], function(err, result) {
+    if (result.choice === 'a') {
+      helpers.addRecipient(contract, address, mainmenu);
+    }
+    else if (result.choice === 'b') {
+      helpers.addNode(contract, address, mainmenu);
+    }
+  })
+}
+
+function preconfig() {
   console.log("########## Plantoid Management Panel ##########");
   // First we check if a contract has been previously deployed
   // If yes, we get its address
@@ -39,23 +64,23 @@ function initiator() {
       console.log("\nYour plant is not deployed on the Ethereum Network yet. Should I deploy it (Y or N): ");
       prompt.get(['choice'], function(err, result) {
         if(result.choice === 'Y') {
-          ethaccounttest(deploycontract, false);
-          //deploycontract
+          accountoption(helpers.deploycontract, false);
         } else {
           console.log("\n########## Exiting Now ##########");
         }
       });
     } else {
-      //var address = ethaccounttest();
-
       var plantoidContract = web3.eth.contract([{"constant":false,"inputs":[{"name":"_nodeaddress","type":"address"}],"name":"addChild","outputs":[],"type":"function"},{"constant":true,"inputs":[],"name":"plant","outputs":[{"name":"ethaddress","type":"address"},{"name":"btcaddress","type":"string"},{"name":"artist","type":"address"},{"name":"parent","type":"address"},{"name":"isParent","type":"bool"},{"name":"threshold","type":"uint256"},{"name":"fundsraised","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"_name","type":"bytes32"},{"name":"_btc_address","type":"string"},{"name":"_amount","type":"uint256"}],"name":"addRecipients","outputs":[],"type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"recipients","outputs":[{"name":"name","type":"bytes32"},{"name":"btcaddress","type":"string"},{"name":"amount","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"_amount","type":"uint256"}],"name":"newFunds","outputs":[],"type":"function"},{"inputs":[{"name":"_btcaddr","type":"string"},{"name":"_artist","type":"address"},{"name":"_parent","type":"address"},{"name":"_threshold","type":"uint256"}],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":false,"name":"s","type":"string"},{"indexed":false,"name":"a","type":"address"}],"name":"SubmissionState","type":"event"}]);
-      //contractaddr = success.trim();
-      contract = plantoidContract.at('0x3a06ff369ce59cf83b68d0c8c0cb32e63dfd17c0');
-      //plantoid.deployContract();
-      //helpers.listener(contract);
-      helpers.addressTx('1LMJ5dtcyuYuUY59pKizggZkKKb89hkDfi');
+
+      contractaddr = success.trim();
+      contract = plantoidContract.at(contractaddr);
+
+      accountoption(initiator, contract);
+      //console.log(web3.eth.getCode('0x3a06ff369ce59cf83b68d0c8c0cb32e63dfd17c0')); //('0xdf1b687a99216ad4ebf9176983bf165be7b25bbe'));
+      //helpers.addressTx('1CGK2zrSFdsahENkFmTJCATRzpCT1opqBH', contract, web3.eth.accounts[1]);
+
     }
   });
 }
 
-initiator();
+preconfig();

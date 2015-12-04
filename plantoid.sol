@@ -16,6 +16,7 @@ contract SubmissionPhase {
   Submission[] public submissions;
 
   event WinnerVoted(string s, string link);
+  event Submitted(string s);
   event SubmissionState(string s);
 
   function SubmissionPhase() {
@@ -26,7 +27,7 @@ contract SubmissionPhase {
 
   function newSubmission(string _artistbtc, string _linktoproposal) submissionlive {
     submissions.push(Submission({btcaddress: _artistbtc, linktoproposal: _linktoproposal, weightedVote: 0}));
-    SubmissionState(_linktoproposal);
+    Submitted(_linktoproposal);
   }
 
   function newVote(uint _weightedVote, uint submissionid) onlyowner {
@@ -36,11 +37,11 @@ contract SubmissionPhase {
   function isEnd() submissionlive {
     if (now >= endtime) {
       isvoted = true;
-      countVotes();
+      SubmissionState("Submission and Voting has ended. Votes will be counted now");
     }
   }
 
-  function countVotes() internal {
+  function countVotes() onlyowner {
     Submission winner = submissions[0];
     //TODO: What if 2 submissions have the same amount of votes?
     for (uint i = 1; i < submissions.length; i++) {
@@ -48,12 +49,8 @@ contract SubmissionPhase {
         winner = submissions[i];
       }
     }
-    endSubmission(winner);
-  }
 
-  function endSubmission(Submission w) internal {
-    WinnerVoted("The winning proposal is", w.linktoproposal);
-    SubmissionState("Submission period has ended");
+    WinnerVoted("The Winner of the Vote:", winner.linktoproposal);
   }
 }
 
@@ -70,9 +67,7 @@ contract Plantoid {
     // if False, it means that it is a single node with no children
     bool isParent;
     uint threshold;
-    uint fundsraised;
-    // we keep track of all nodes this plant has by mapping the unique identifier to the plants address
-    address[] nodes;
+    uint256 fundsraised;
   }
 
   struct Recipient {
@@ -84,6 +79,8 @@ contract Plantoid {
   Heart public plant;
   // List of all recipients that receive a percentage of donations
   Recipient[] public recipients;
+  // we keep track of all nodes (children) this plant has
+  address[] public nodes;
 
   event SubmissionState(string s, address a);
 
@@ -101,12 +98,12 @@ contract Plantoid {
     recipients.push(Recipient({name: "Parent Plant", btcaddress: _btcaddr, amount: 1}));
   }
 
-  function newFunds(uint _amount) onlyowner {
+  function newFunds(uint256 _amount) onlyowner {
     plant.fundsraised += _amount;
 
     if (plant.fundsraised >= plant.threshold) {
       plant.fundsraised = 0;
-      address submissionsaddr = new SubmissionPhase();
+      address submissionsaddr = address(new SubmissionPhase());
       SubmissionState("Submission Phase started", submissionsaddr);
     }
   }
@@ -119,6 +116,6 @@ contract Plantoid {
   // Once a child plant has been successfully created, we will link it to this plant (the parent)
   function addChild(address _nodeaddress) onlyowner {
     plant.isParent = true;
-    plant.nodes.push(_nodeaddress);
+    nodes.push(_nodeaddress);
   }
 }

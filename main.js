@@ -17,7 +17,8 @@ function accountoption(cb, contract) {
   if (accounts.length === 1) {
     address = accounts[0];
     cb(initiator, address);
-  } else {
+  }
+  else {
     console.log("\nWhich account have you unlocked? (Type in 0 - %d for the index of the account)", accounts.length - 1);
     console.log(accounts);
     prompt.get(['account'], function(err, result) {
@@ -35,9 +36,8 @@ function accountoption(cb, contract) {
 
 function initiator(contract, btcaddr) {
   helpers.eventSubmissionStart(contract);
-  //setInterval(helpers.addressTx, 1000 * 60 * 15, btcaddr, contract, address, helpers.readlasttx);
-  helpers.addFunds(100000005, 1234, contract, address)
-  //mainmenu(contract);
+  setInterval(helpers.addressTx, 1000 * 60 * 15, btcaddr, contract, address, helpers.readlasttx);
+  mainmenu(contract);
 }
 
 function mainmenu(contract) {
@@ -81,11 +81,9 @@ function preconfig() {
       contract = plantoidContract.at(contractaddr);
 
       if (contract_list[1]) {
-        //helpers.eventSubmissionEnd(contract_list[1]);
+        helpers.eventSubmissionEnd(contract_list[1]);
       }
-      //accountoption(initiator, contract);
-      helpers.voteCount('3MFrDvkL2HNCztPdBEdHhXcoPTtwNbigJ4 ', contract, web3.eth.accounts[1], helpers.readlasttx);
-      //helpers.addressTx('1JT8Lr45cbB6b2fsezfBhxyGdQ2ARuNvKS', contract, web3.eth.accounts[1], helpers.readlasttx);
+      accountoption(initiator, contract);
 
     }
   });

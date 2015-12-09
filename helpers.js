@@ -159,31 +159,30 @@ function prepareTx(responses, address, contract, ethaddress, cb, artistindex) {
 }
 
 function artistVoteCount(address_list, artistindex) {
-  console.log(address_list);
-  // fs.readFile('./alltxs.txt', 'utf8', function(error, success) {
-  //   if (success) {
-  //     var previous_txs = [];
-  //     // We read all of the previous txs and put them into an array
-  //     success.split("\n").forEach(function(tx) {
-  //       if (tx) {
-  //         previous_txs.push(JSON.parse(tx));
-  //       }
-  //     })
-  //
-  //     // We create a list of all the addresses that sent a transaction
-  //     var totalvalue = 0;
-  //     address_list.forEach(function(voteraddr) {
-  //
-  //       for (var i = 0; i < previous_txs.length; i++) {
-  //         if (previous_txs[i]['from'] === voteraddr) {
-  //           //console.log(previous_txs[i]['from'], previous_txs[i]['value']);
-  //           totalvalue += previous_txs[i]['value'];
-  //         }
-  //       }
-  //     });
-  //     console.log(totalvalue)
-  //   }
-  // })
+  fs.readFile('./alltxs.txt', 'utf8', function(error, success) {
+    if (success) {
+      var previous_txs = [];
+      // We read all of the previous txs and put them into an array
+      success.split("\n").forEach(function(tx) {
+        if (tx) {
+          previous_txs.push(JSON.parse(tx));
+        }
+      })
+
+      // We create a list of all the addresses that sent a transaction
+      var totalvalue = 0;
+      address_list.forEach(function(voteraddr) {
+
+        for (var i = 0; i < previous_txs.length; i++) {
+          if (previous_txs[i]['from'] === voteraddr) {
+            //console.log(previous_txs[i]['from'], previous_txs[i]['value']);
+            totalvalue += previous_txs[i]['value'];
+          }
+        }
+      });
+      console.log(totalvalue)
+    }
+  })
 }
 
 
@@ -261,9 +260,6 @@ function addressTx(address, contract, ethaddress, cb, artistindex) {
          responses.push(data);
 
          if (responses.length === 3) {
-           /**
-           **   UGLY hack for simplicity reasons. We can later change it go through the bitcoin address on startup and get unix timestamp so that we know the time of the latest tx. This should do for now...
-           **/
            //TODO: Check if responses empty
            cb(responses, address, contract, ethaddress, explorers, artistindex);
          }
@@ -272,7 +268,6 @@ function addressTx(address, contract, ethaddress, cb, artistindex) {
          /**
          ** One of the API's is unreachable, if two of the api's successfully returned our request, we continue
          **/
-         console.log(key);
          if (responses.length >= 2) {
            //TODO: Check if responses empty
            cb(responses, address, contract, ethaddress, explorers, artistindex);
